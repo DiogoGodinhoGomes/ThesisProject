@@ -1,0 +1,140 @@
+http://astroutils.astronomy.ohio-state.edu/time/index.html
+
+---
+
+https://arxiv.org/abs/0708.0822 <--- Equation 2
+
+---
+
+https://en.wikipedia.org/wiki/HD_209458_b
+http://exoplanet.eu/catalog/hd_209458_b/
+http://exoplanets.org/detail/HD_209458_b
+https://arxiv.org/pdf/astro-ph/0603542.pdf
+https://exoplanetarchive.ipac.caltech.edu/cgi-bin/DisplayOverview/nph-DisplayOverview?objname=HD+209458+b
+https://en.wikipedia.org/wiki/Heliocentric_Julian_Day
+
+---
+
+De Kok 2013 (before PCA - carbon monoxide)
+
+---
+
+Parallel Processing:
+
+https://docs.python.org/dev/library/multiprocessing.html
+
+---
+
+Alignment:
+
+https://arxiv.org/abs/1710.05276
+
+---
+
+Sigma Clipping:
+
+i) Normalise each spectrum (i.e. *row*) so that its median (continuum) is 1.
+ii) Subtract the mean from each *column*.
+iii) Divide each *column* by its standard deviation (i.e. this value is different for every column)
+iv) Flag any pixel >5 as a bad pixel.
+
+---
+
+Interpolation:
+
+https://docs.scipy.org/doc/scipy/reference/tutorial/interpolate.html#spline-interpolation-in-1-d-procedural-interpolate-splxxx
+
+---
+
+Sync:
+
+cd Documents/
+grive sync --upload-only --dir Thesis
+
+---
+
+Data:
+
+http://home.strw.leidenuniv.nl/~birkby/hd209_dayside_3_5_gomes.zip
+
+---
+
+Object visibility:
+
+http://catserver.ing.iac.es/staralt/index.php
+
+---
+
+Object coordinates:
+
+http://simbad.u-strasbg.fr/simbad/sim-fid
+
+---
+
+Useful websites:
+
+http://docs.astropy.org/en/stable/io/fits/ (AstroPy Tutorial)
+
+---
+
+Printed Papers:
+
+https://www.eso.org/sci/publications/messenger/archive/no.154-dec13/messenger-no154-57-61.pdf
+https://www.aanda.org/articles/aa/pdf/2014/01/aa22947-13.pdf
+
+---
+
+Papers (high-resolution spectra and HD 209458 b):
+
+https://arxiv.org/abs/1411.6017
+https://arxiv.org/abs/1502.04713
+https://arxiv.org/abs/1612.07008
+https://arxiv.org/abs/1701.07257
+
+---
+
+Papers (modelling aspect):
+
+http://adsabs.harvard.edu/abs/2017arXiv170602302G
+http://adsabs.harvard.edu/abs/2017arXiv170603188H
+
+---
+
+First steps:
+
+End-to-end pipeline
+***********************
+Align spectra
+Remove airmass, temperature, etc.
+(Bad pixel correction)
+Do cross-correlation with models
+Shift and sum
+Divide std dev
+***********************
+
+Do PCA
+Try Sysrem
+
+---
+
+Next steps:
+
+T-test
+Wavelength calibration
+Bad pixel correction
+Re-extract data
+
+---
+
+December 1 (12 weeks):
+
+Complete end-to-end pipeline running
+First draft of introduction and observations section (in LaTeX and BibTeX ideally)
+
+---
+
+April 30:
+
+First draft of results and discussion
+Final draft of introduction and observations
+Refinement of pipeline

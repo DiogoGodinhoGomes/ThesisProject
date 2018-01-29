@@ -1,0 +1,1 @@
+Wavelength calibration is for frame 11. All spectra are aligned to frame 11. Wavelength solution is in data3.fits. Do not use the spectra contained within data3.fits. Use your own once you have aligned them, then add the wavelength solution from data3.fits to your aligned spectra. Even better, calculate your own wavelength solution for your aligned spectra.

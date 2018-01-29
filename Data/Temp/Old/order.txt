@@ -1,0 +1,9 @@
+['Data/000.fits' 'Data/001.fits' 'Data/002.fits' 'Data/003.fits'
+ 'Data/004.fits' 'Data/005.fits' 'Data/006.fits' 'Data/007.fits'
+ 'Data/008.fits' 'Data/009.fits' 'Data/010.fits' 'Data/011.fits'
+ 'Data/012.fits' 'Data/013.fits' 'Data/014.fits' 'Data/015.fits'
+ 'Data/016.fits' 'Data/017.fits' 'Data/018.fits' 'Data/019.fits'
+ 'Data/020.fits' 'Data/021.fits' 'Data/022.fits' 'Data/023.fits'
+ 'Data/024.fits' 'Data/025.fits' 'Data/026.fits' 'Data/027.fits'
+ 'Data/028.fits' 'Data/029.fits' 'Data/030.fits' 'Data/031.fits'
+ 'Data/032.fits']
