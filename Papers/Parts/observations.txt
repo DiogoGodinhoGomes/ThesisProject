@@ -1,0 +1,86 @@
+Observations
+
+--- DATA ---
+
+Date:
+ - 2014-07-08
+Duration:
+ - 1 night
+ - 5 hours
+ - First: 05:03:32.7592
+ - Last: 10:13:02.2147
+Phases:
+ - 0.53 - 0.59
+Exoplanet:
+ - HD 209458 b
+Host:
+ - HD 209458
+ - B-band: 8.21±0.02 (mag)
+ - K-band: 6.308±0.026 (mag)
+Instrument:
+ - VLT/CRIRES mounted at Nasmyth A focus at the Very Large Telescope (VLT, 8.2-m UT1/Antu), Cerro Paranal, Chile
+ - Infrared detector with four Aladdin III InSb detectors, each of the size 1024 x 512 pixels with gaps of about 280 pixels between the individual detectors
+ - Multi Application Curvature Adapative Optics system (MACAO, Arsenault et al. 2003)
+Resolution:
+ - R ~ 100 000
+Program:
+ - ESO large program 186.C-0289 
+ - Designed to study the brightest transiting and non-transiting hot-Jupiter systems visible from Cerro Paranal
+Aim:
+ - Determining the structure and composition of a hot Jupiter’s atmosphere using high resolution spectroscopy
+Spectra:
+ - 33
+ - DIT: 30.0 s
+ - NDIT: 8
+ - DIT delay: 0.1 s
+Seeing:
+ - 0.67 (7) - 1.38 (32) arcsec
+Wavelength:
+ - 3.459 - 3.543 μm
+ - 3.501 μm
+
+--- DRAFT ---
+
+The targets of the observations were the host star HD 209458 (B = 8.21 ± 0.02 mag (H{\o}g et al. 2000), K = 6.308 ± 0.026 mag (Cutri et al. 2003)) and its companion, HD 209458 b, a Hot Jupiter in a close transiting orbit (M = 0.714 ± 0.017 MJ, a = 0.04747 ± 0.00055 au, i = 86.590 ± 0.046 deg (Southworth 2010)), for approximately 5 hours on the night of July 8th, 2014. The instrument used was the CRyogenic high-resolution InfraRed Echelle Spectrograph (CRIRES), mounted at the Nasmyth focus A of the 8.2-m UT1/Antu at the ESO's Very Large Telescope (VLT), Cerro Paranal, Chile. This infrared detector contains four Aladdin III InSb detectors, each of them with size 1024 x 512 pixels, and gaps of around 280 pixels between each pair of detectors. These observations (concerning the determination of the structure and composition of HD 209458 b’s atmosphere) are part of ESO's program 186.C-0289, which intends to study the brightest transiting and non-transiting hot-Jupiter systems visible from Cerro Paranal.
+
+During the observations, 33 spectra were collected on the L Band - the atmospheric transmission window in the mid-infrared around 3.5 μm - each one of them being the result of two different sets of exposures of 8 x 30.0 s each, with a delay of 0.1 s between integrations. Althought setting a fixed position for the telescope relatively to the slit increases stability and decreases the overheads, in order to achieve an easier sky-background subtraction, these observations were done in the nodding mode: the telescope was nodded along the slit by 10 arcsec between each set of exposures in a ABBA pattern. As a consequence, the final extracted data consist of an AB or a BA pair per spectrum.
+
+The range of wavelengths covered with the observations was 3.459-3.543 μm, with a resolution of R ~ 100000 which corresponds to approximately 1.5 km/s per resolution element on the exoplanet's radial velocity - this high resolution results from using a 0.2 arcsec slit together with the Multi Application Curvature Adapative Optics (MACAO) system (Arsenault et al. 2003). HD 209458 b was continuously observed shortly after a secondary eclipse, when a significant portion of the dayside of the planet was visible, during the orbital phases ranging between 0.53 and 0.59. For these observed orbital phases and a radial velocity semi-amplitude (approximately the same as the orbital velocity, as the system has an inclination of almost 90 deg) of Kp = 140 ± 10 km/s (Snellen et al. 2010), the expected variation in the exoplanet's radial velocity throughout the observations is about ∆RVp ~ 48 km/s (or 32 pixels on the CRIRES detectors).
+
+During the observations, the seeing evolved to get higher towards the last extracted spectra: it reached its minimum on the eighth spectrum - 0.67 arcsec - and its maximum on the very last one - 1.50 arcsec.
+
+--- EXAMPLES ---
+
+The observations were originally aimed at detecting [AIMS] of [EXOPLANET].
+The data used in this analysis were taken on [DATE] using the [INSTRUMENT].
+We observed the bright star [HOST] (V = [HOST] mag, K = [HOST] mag) for [DURATION] hours during [DATE], using [INSTRUMENT].
+We observed [HOST] (K = [HOST] mag) for a total of [DURATION] hours during [DATE] nights in [DATE] as part of [PROGRAM], which was designed to study [AIMS].
+It consists of [SPECTRA] observations of [EXOPLANET] obtained with [INSTRUMENT] in the range [WAVELENGTH].
+The data consist of [SPECTRA] exposures with a mean exposure time of [SPECTRA] which cover [WAVELENGTH].
+The data consist of [DURATION] nights of dayside spectra taken with [INSTRUMENT] in the range [WAVELENGTH] at [RESOLUTION], and are described in detail in [PAPER(1)].
+In total, we obtained [SPECTRA] each consisting of two sets of [SPECTRA] × [SPECTRA] second exposures, at the standard wavelength settings for the reference wavelength [WAVELENGTH].
+The resulting wavelength coverage of the observations was [WAVELENGTH] with a resolution of [RESOLUTION] ([RESOLUTION] km/s per resolution element).
+The observed orbital phases correspond to an expected change in the planet's radial velocity of ∆RVp = [VELOCITY] ([VELOCITY] pixels on the CRIRES detectors).
+The target was observed continuously for [DURATION] hours at planetary phases shortly after a secondary eclipse, when a significant portion of the dayside of the planet was visible.
+There was a deterioration of the seeing (ranging from [SEEING] arcsec to [SEEING] arcsec between the entire set of frames).
+We used a 0.2 arcsec slit in combination with the [INSTRUMENT] to achieve the highest possible resolution of [RESOLUTION].
+The instrument setup consisted of a 0.2 arcsec slit centred on [WAVELENGTH], in combination with the [INSTRUMENT].
+The observations were done in nodding mode, where the telescope is nodded along the slit by 10 arcsec in an ABBA pattern, providing an easy method for background subtraction (no nodding enhances stability and reduce overheads, though).
+For accurate sky-background subtraction, the telescope was nodded along the slit by 10 arcsec between each set of exposures in a classic ABBA sequence, with each of the final [SPECTRA] extracted spectra consisting of an AB or BA pair.
+
+--- OPTIONAL ---
+
+The observations were collected as part of the [PROGRAM].
+We utilize the same calibrated and extracted spectra as Schwarz et al. (2015), with one important difference: we also estimate the weight of each CRIRES detector based on the injection and retrieval of an artificial signal.
+The basic data reduction (such as bias subtraction, flat fielding and 1D spectral extraction) were performed by Snellen et al. (2008) and are described therein in detail.
+We only include the nodded observations (2 out of 3 sets of data) for which we have a good understanding of the instrument.
+Each spectral order is sampled at [RESOLUTION] km/s per pixel over [PIXELS] pixels.
+A standard set of CRIRES calibration frames was taken on the [...].
+More details of the observations are given in [...].
+
+--- QUESTIONS ---
+
+Do we also estimate the weight of each CRIRES detector based on the injection and retrieval of an artificial signal?
+Is there a paper where the first data reduction (the one I didn't do: .bin to .fits) is described in detail?
+Was there a standard set of CRIRES calibration frames?
+Is there a paper containing more details of these observations?
