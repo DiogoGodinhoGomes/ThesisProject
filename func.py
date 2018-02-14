@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 
-import copy as cp
 import glob as gb
 import numpy as np
 import argparse as ap
@@ -28,9 +27,36 @@ def fnam():
     # Lists the corresponding file's names in a single array.
     temp = []
     for name in parser.parse_args().files:
-        temp += cp.deepcopy(gb.glob(name))
+        temp += gb.glob(name)
 
-    return np.copy(temp)
+    return np.array(temp)
+
+
+# ---------------------
+# - HEADER EXTRACTION -
+# ---------------------
+def fhea(flist, elist, hnum):
+    '''
+    Returns an array with the lists of the desired values for all the spectra.
+     > flist: list of file's names
+     > elist: list of the desired entry's names or indexes
+     > hnum: number of the header to be used
+     < temp: array with the desired lists
+    '''
+
+    # Creates an empty array that will contain the lists of the desired values
+    # for all the spectra.
+    temp = []
+    [temp.append([]) for i in range(len(elist))]
+
+    # For each .fits file (corresponding to a single spectrum), stores all the
+    # desired values from the header in the corresponding list.
+    for name in flist:
+        with fits.open(name) as doc:
+            for i in range(len(elist)):
+                temp[i].append(doc[hnum].header[elist[i]])
+
+    return np.array(temp)
 
 
 # ----------------------
@@ -44,6 +70,10 @@ def fima(flist, col):
      < npile: array (or pile) of images
     '''
 
+    # Gets the values of DIT and NDIT from the .fits files. DIT is the time of
+    # integration and NDIT is the number of integrations used.
+    dura = fhea(flist, ['HIERARCH ESO DET DIT', 'HIERARCH ESO DET NDIT'], 0)
+
     # Calculates the number of chips used to capture the spectra.
     with fits.open(flist[0]) as mome:
         cnum = len(mome)-1
@@ -55,15 +85,19 @@ def fima(flist, col):
     for i in range(cnum):
         npile.append([])
         npile.append([])
+        # Gets the values of the gain for the different chips.
+        gain = fhea(flist, ['HIERARCH ESO DET CHIP GAIN'], i+1)[0]
+
         # For each .fits file (corresponding to a single spectrum), stores its
         # spectrum, both the original and the one normalized to the median.
-        for name in flist:
-            with fits.open(name) as doc:
-                got = np.copy(doc[i+1].data.field(col))
-                npile[2*i].append(list(got))
-                npile[2*i+1].append(list(got/np.median(got[got != 0])))
+        for j in range(len(flist)):
+            with fits.open(flist[j]) as doc:
+                conv = 2*dura[0][j]*dura[1][j]*gain[j]
+                got = doc[i+1].data.field(col)*conv
+                npile[2*i].append(got)
+                npile[2*i+1].append(got/np.median(got[got != 0]))
 
-    return np.copy(npile)
+    return np.array(npile)
 
 
 # -----------------------
@@ -84,19 +118,19 @@ def flis(data, tag):
     if len(data) == 4:
         for i in range(len(data)):
             title = 'CHIP' + str(int(i+1))
-            temp.append(cp.deepcopy(fits.ImageHDU(data=data[i], name=title)))
+            temp.append(fits.ImageHDU(data=data[i], name=title))
     if len(data) == 8:
         for i in range(len(data)):
             title = 'CHIP' + str(int(i*0.5+1))
             if i % 2 == 1:
                 title += '_' + tag
-            temp.append(cp.deepcopy(fits.ImageHDU(data=data[i], name=title)))
+            temp.append(fits.ImageHDU(data=data[i], name=title))
 
     return temp
 
 
 # --------------------
-# - IMAGE COLLECTION -
+# - IMAGE EXTRACTION -
 # --------------------
 def frea(fname):
     '''
@@ -111,12 +145,12 @@ def frea(fname):
     with fits.open(fname) as doc:
         [npile.append(doc[i+1].data) for i in range(len(doc)-1)]
 
-    return np.copy(npile)
+    return np.array(npile)
 
 
-# --------------------
-# - ERROR COLLECTION -
-# --------------------
+# -------------------------
+# - FLUX ERROR EXTRACTION -
+# -------------------------
 def ferr(flist, col):
     '''
     Returns an array of flux errors, given the spectra.
@@ -124,6 +158,10 @@ def ferr(flist, col):
      > col: column's name
      < npile: array (or pile) of errors
     '''
+
+    # Gets the values of DIT and NDIT from the .fits files. DIT is the time of
+    # integration and NDIT is the number of integrations used.
+    dura = fhea(flist, ['HIERARCH ESO DET DIT', 'HIERARCH ESO DET NDIT'], 0)
 
     # Calculates the number of chips used to capture the spectra.
     with fits.open(flist[0]) as mome:
@@ -133,12 +171,17 @@ def ferr(flist, col):
     npile = []
     for i in range(cnum):
         npile.append([])
-        # For each .fits file (or spectrum), stores its errors.
-        for name in flist:
-            with fits.open(name) as doc:
-                npile[i].append(list(np.copy(doc[i+1].data.field(col))))
+        # Gets the values of the gain for the different chips.
+        gain = fhea(flist, ['HIERARCH ESO DET CHIP GAIN'], i+1)[0]
 
-    return np.copy(npile)
+        # For each .fits file (or spectrum), stores its errors.
+        for j in range(len(flist)):
+            with fits.open(flist[j]) as doc:
+                conv = 2*dura[0][j]*dura[1][j]*gain[j]
+                got = doc[i+1].data.field(col)*conv
+                npile[i].append(got)
+
+    return np.array(npile)
 
 
 # ------------------------
@@ -167,7 +210,7 @@ def fhis(data, axis, tag):
         pl.savefig(iname, dpi=500)
         pl.close()
 
-    return np.copy(temp)
+    return np.array(temp)
 
 
 # ------------------
@@ -188,9 +231,9 @@ def fsig(data, sigma, ndoc):
     # and the second image contains all the rejected pixels).
     npile = []
     for i in range(int(len(data)/2)):
-        npile.append(cp.deepcopy(list(data[i*2+1])))
-        npile.append(cp.deepcopy(list(data[i*2+1])))
-    npile = np.copy(npile)
+        npile.append(np.copy(data[i*2+1]))
+        npile.append(np.copy(data[i*2+1]))
+    npile = np.array(npile)
 
     # Calculates arrays with the average per column of data in every chip.
     ml, sl = [], []
@@ -206,7 +249,7 @@ def fsig(data, sigma, ndoc):
         sl.append(np.std(npile[i*2], axis=0))
         for j in range(len(npile[i*2])):
             for k in range(len(npile[i*2][j])):
-                if sl[i][k] != 0.0:
+                if sl[i][k] != 0:
                     npile[i*2][j][k] /= sl[i][k]
 
     # Flags rejected pixels (and also detects columns which have null standard
@@ -214,19 +257,19 @@ def fsig(data, sigma, ndoc):
     # ones can easily be detected on the output images.
     with open(ndoc, 'w') as doc:
         for i in range(int(len(npile)/2)):
-            npile[i*2+1] = list(np.copy(npile[i*2]))
+            npile[i*2+1] = np.copy(npile[i*2])
         for i in range(int(len(npile)/2)):
             for j in range(len(npile[i*2+1])):
                 for k in range(len(npile[i*2+1][j])):
-                    if sl[i][k] == 0.0:
+                    if sl[i][k] == 0:
                         npile[i*2+1][j][k] = sigma
                     if abs(npile[i*2+1][j][k]) >= sigma:
-                        npile[i*2+1][j][k] = 1.0
+                        npile[i*2+1][j][k] = 1
                         doc.write(str(i+1)+'\t'+str(k+1)+'\t'+str(j+1)+'\n')
                     else:
                         npile[i*2+1][j][k] = 0.5
 
-    return np.copy(npile)
+    return npile
 
 
 # ---------------------
@@ -268,7 +311,7 @@ def fbad(size, ndoc):
                 if l[1] == 1:
                     temp[1][l[0]-1][k] = np.append(temp[1][l[0]-1][k], j)
 
-    return np.copy(temp)
+    return np.array(temp)
 
 
 # ----------------------
@@ -287,9 +330,9 @@ def fcor(data, bpix):
     # will also be created for each chip).
     npile = []
     for i in range(int(len(data)/2)):
-        npile.append(cp.deepcopy(list(data[i*2])))
-        npile.append(cp.deepcopy(list(data[i*2])))
-    npile = np.copy(npile)
+        npile.append(np.copy(data[i*2]))
+        npile.append(np.copy(data[i*2]))
+    npile = np.array(npile)
 
     # Interpolates the bad pixels in every chip, using cubic splines without
     # smoothing based only on the values coming from the good pixels.
@@ -308,7 +351,7 @@ def fcor(data, bpix):
             # the fluxes should be in all the bad pixels.
             ynew = interpolate.splev(xnew, rep, der=0)
             for k in range(len(xnew)):
-                npile[i*2][j][int(xnew[k])] = cp.deepcopy(ynew[k])
+                npile[i*2][j][int(xnew[k])] = ynew[k]
 
     # Masks, in every chip, the bad pixels that cannot be interpolated, by
     # setting them all to zero.
@@ -323,7 +366,7 @@ def fcor(data, bpix):
             got = np.copy(npile[i*2][j])
             npile[i*2+1][j] = got/np.median(got[got != 0])
 
-    return np.copy(npile)
+    return npile
 
 
 # ---------------------
@@ -369,7 +412,7 @@ def fali(data, erro, bpix, pdiv, pamp, tname):
             naux = np.delete(oaux, baux)
             # Calculates the sum (pixel by pixel) of the squared flux-to-error
             # (signal-to-noise) ratios, corrected by the amount of good pixels.
-            aux = sum((data[2*chip][s][naux]/erro[chip][s][naux])**2.0)
+            aux = sum((data[2*chip][s][naux]/erro[chip][s][naux])**2)
             total.append(aux/float(len(naux)))
             # Plots the obtained signal-to-noise per spectrum.
             for i in range(len(shif)):
@@ -378,7 +421,7 @@ def fali(data, erro, bpix, pdiv, pamp, tname):
                 pl.title('Chip %d - Normalized signal-to-noise' % (chip+1))
                 pl.xlabel('Spectrum number')
                 pl.ylabel('Signal-to-noise')
-                pl.axis([0, 35, 0.0, 1.0])
+                pl.axis([0, 35, 0, 1])
                 pl.grid(True)
                 pl.savefig(iname, dpi=500)
                 pl.close()
@@ -394,7 +437,7 @@ def fali(data, erro, bpix, pdiv, pamp, tname):
         for pix in bpix[0][chip][spec]:
             for i in np.arange(pix-pamp, pix+pamp+1, 1):
                 if i not in xbad and i >= 0 and i < leng:
-                    xbad.append(cp.deepcopy(i))
+                    xbad.append(i)
         xfix = np.delete(np.arange(0, leng, 1), xbad)
         yfix = np.copy(data[2*chip][spec][xfix])
 
@@ -410,8 +453,8 @@ def fali(data, erro, bpix, pdiv, pamp, tname):
                 # Stores zero as the pixel shift applied to this spectrum and
                 # stores both the fixed spectrum and its normalized version.
                 shif[chip].append(0)
-                npile[2*chip].append(list(vals))
-                npile[2*chip+1].append(list(vals/np.median(vals[vals != 0])))
+                npile[2*chip].append(vals)
+                npile[2*chip+1].append(vals/np.median(vals[vals != 0]))
 
             # If this spectrum has to be aligned, then the sum of the squared
             # differences are calculated across all the possible shifts that
@@ -438,8 +481,8 @@ def fali(data, erro, bpix, pdiv, pamp, tname):
                     ynew = interpolate.splev(xfix + pix, rep, der=0)
                     # Calculates the sum of the squared differences relatively
                     # to the fixed spectrum.
-                    total.append(sum((yfix-ynew)**2.0))
-                shif[chip].append(cp.deepcopy(plist[total.index(min(total))]))
+                    total.append(sum((yfix-ynew)**2))
+                shif[chip].append(plist[total.index(min(total))])
 
                 # Generates the definite interpolated flux values, considering
                 # already the final pixel positions that align the two spectra.
@@ -449,8 +492,8 @@ def fali(data, erro, bpix, pdiv, pamp, tname):
                     if i in bpix[0][chip][s]:
                         yfin[i] = 0
                 # Stores both the fixed spectrum and its normalized version.
-                npile[2*chip].append(list(yfin))
-                npile[2*chip+1].append(list(yfin/np.median(yfin[yfin != 0])))
+                npile[2*chip].append(yfin)
+                npile[2*chip+1].append(yfin/np.median(yfin[yfin != 0]))
 
     # Plots the obtained pixel shifts that were applied to the spectra.
     for i in range(len(shif)):
@@ -462,7 +505,7 @@ def fali(data, erro, bpix, pdiv, pamp, tname):
         pl.title('Chip %d - Spectra alignment' % (i+1))
         pl.xlabel('Spectrum number')
         pl.ylabel('Pixel shift')
-        pl.axis([0, 35, -1.0, 1.0])
+        pl.axis([0, 35, -1, 1])
         pl.grid(True)
         pl.savefig(iname, dpi=500)
         pl.close()
@@ -478,30 +521,4 @@ def fali(data, erro, bpix, pdiv, pamp, tname):
     # Inserts a column (with the spectra numbers) in the pixel shifts array.
     shif = np.insert(shif, 0, np.array(range(len(shif[0]))), axis=0)
 
-    return np.copy(npile), np.copy(shif)
-
-
-# ---------------------
-# - HEADER COLLECTION -
-# ---------------------
-def fhea(flist, elist):
-    '''
-    Returns an array with the lists of the desired values for all the spectra.
-     > flist: list of file's names
-     > elist: list of the desired entry's names or indexes
-     < temp: array with the desired lists
-    '''
-
-    # Creates an empty array that will contain the lists of the desired values
-    # for all the spectra.
-    temp = []
-    [temp.append([]) for i in range(len(elist))]
-
-    # For each .fits file (corresponding to a single spectrum), stores all the
-    # desired values from the header in the corresponding list.
-    for name in flist:
-        with fits.open(name) as doc:
-            for i in range(len(elist)):
-                temp[i].append(cp.deepcopy(doc[0].header[elist[i]]))
-
-    return np.copy(temp)
+    return np.array(npile), shif

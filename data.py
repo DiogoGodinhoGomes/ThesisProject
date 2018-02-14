@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 
-import copy as cp
 import glob as gb
 import func as fc
 import numpy as np
@@ -47,7 +46,7 @@ if __name__ == '__main__':
     tname = 'Data/Temp/t01wlen.fits'
     if v is '1':
         with fits.open(fname) as doc:
-            pwave = np.copy(doc[1].data['WLEN'])[0]
+            pwave = 10*doc[1].data['WLEN'][0]
         fc.flis(pwave, 'NORM').writeto(tname, overwrite=True)
         print('     Process complete.')
     else:
@@ -99,7 +98,7 @@ if __name__ == '__main__':
     # #
     v = input(' - Histograms generation... ')
     if v is '1':
-        fc.fhis(pextr, [0, 50, 0, 2500], 'c0')
+        fc.fhis(pextr, [0, 1.6e5, 0, 2500], 'c0')
         print('     Process complete.')
     else:
         print('     Process skipped.')
@@ -176,13 +175,14 @@ if __name__ == '__main__':
         salig = np.swapaxes(np.array(np.genfromtxt(tname), dtype=None), 0, 1)
         print('     Read-in complete.')
 
+    '''
     # ---------------------------
     # -                         -
     # - VERY VERY VERY RAW CODE -
     # -                         -
     # ---------------------------
 
-    obs_times = fc.fhea(flist, ['MJD-OBS'])
+    obs_times = fc.fhea(flist, ['MJD-OBS'], 0)
 
     pl.title('Observed times')
     pl.plot(range(len(obs_times[0])), obs_times[0], 'rx')
@@ -220,15 +220,11 @@ if __name__ == '__main__':
     pl.savefig('t_zero_diff_' + s_tag[number] + '.png', dpi=500)
     pl.close()
 
-    palig_old = np.copy(palig)
-
     # # # LEAST SQUARES - MODEL # # #
     # MODEL INJECTION
     rdt = 0.001
     tag = str(rdt)
     sol, wl = 299792.458, 3.5
-    wlen, data = np.copy(pwave), np.copy(palig)
-    # phase = np.linspace(-np.pi/32.0, np.pi/16.0, num=len(wlen[0]))
     phase = obs_phases
 
     mname = 'Data/Models/spec_1-1-1-1-1-1.dat'
@@ -237,21 +233,20 @@ if __name__ == '__main__':
     rep = interpolate.splrep(ximp, yimp, s=0)
 
     kp, vsys, vbar = 135.0, -140.0, 0.0
-    wldel = (wl/sol)*(kp*np.sin(2.0*np.pi*phase)+vsys+vbar)
+    wldel = (wl/sol)*(kp*np.sin(2*np.pi*phase)+vsys+vbar)
 
-    pcomp = []
-    for i in range(int(len(data)/2)):
-        pcomp.append([])
-        pcomp.append([])
-        for j in range(len(data[2*i+1])):
-            ins = np.copy(10.0*wlen[i][j])
+    ptemp = []
+    for i in range(int(len(palig)/2)):
+        ptemp.append([])
+        ptemp.append([])
+        for j in range(len(palig[2*i+1])):
+            ins = np.copy(pwave[i][j])
             mflux = interpolate.splev(ins + wldel[j], rep, der=0)
-            ins = np.copy((mflux**rdt)*data[2*i][j])
+            ins = (mflux**rdt)*np.copy(palig[2*i][j])
             mdn = np.median(ins[ins != 0])
-            pcomp[2*i].append(ins)
-            pcomp[2*i+1].append(ins/mdn)
-    pcomp = np.array(pcomp)
-    palig = np.copy(pcomp)
+            ptemp[2*i].append(ins)
+            ptemp[2*i+1].append(ins/mdn)
+    palig = np.array(ptemp)
     fname = 'Data/Temp/P' + tag + '/t04inje' + tag + '.fits'
     fc.flis(palig, 'NORM').writeto(fname, overwrite=True)
 
@@ -262,20 +257,20 @@ if __name__ == '__main__':
              'HIERARCH ESO TEL AMBI TEMP',
              'HIERARCH ESO TEL AMBI FWHM END',
              'HIERARCH ESO TEL AMBI FWHM START']
-    head = fc.fhea(flist, elist)
+    head = fc.fhea(flist, elist, 0)
     # Airmass will be the mean of the two available values.
-    am = (head[0]+head[1])/2.0
+    am = (head[0]+head[1])*0.5
     # Temperature will be the only value available.
     tp = head[2]
     # Seeing will be the mean of the two available values, corrected from the
     # unexpected -1 values.
     si = []
     for i in range(len(head[3])):
-        if head[3][i] != -1.0 and head[4][i] != -1.0:
-            si.append((head[3][i]+head[4][i])/2.0)
-        if head[3][i] == -1.0:
+        if head[3][i] != -1 and head[4][i] != -1:
+            si.append((head[3][i]+head[4][i])*0.5)
+        if head[3][i] == -1:
             si.append(head[4][i])
-        if head[4][i] == -1.0:
+        if head[4][i] == -1:
             si.append(head[3][i])
     si = np.array(si)
 
@@ -288,21 +283,21 @@ if __name__ == '__main__':
         for j in range(len(palig[i][0])):
             flux = np.copy(palig[2*i, :, j])
             if not np.array_equal(flux, np.zeros(len(flux))):
-                lin[0].append(stats.linregress(am, flux)[2]**2.0)
+                lin[0].append(stats.linregress(am, flux)[2]**2)
                 log[0].append(stats.linregress(np.log10(am),
-                                               np.log10(flux))[2]**2.0)
-                linlog[0].append(stats.linregress(am, np.log10(flux))[2]**2.0)
-                loglin[0].append(stats.linregress(np.log10(am), flux)[2]**2.0)
-                lin[1].append(stats.linregress(tp, flux)[2]**2.0)
+                                               np.log10(flux))[2]**2)
+                linlog[0].append(stats.linregress(am, np.log10(flux))[2]**2)
+                loglin[0].append(stats.linregress(np.log10(am), flux)[2]**2)
+                lin[1].append(stats.linregress(tp, flux)[2]**2)
                 log[1].append(stats.linregress(np.log10(tp),
-                                               np.log10(flux))[2]**2.0)
-                linlog[1].append(stats.linregress(tp, np.log10(flux))[2]**2.0)
-                loglin[1].append(stats.linregress(np.log10(tp), flux)[2]**2.0)
-                lin[2].append(stats.linregress(si, flux)[2]**2.0)
+                                               np.log10(flux))[2]**2)
+                linlog[1].append(stats.linregress(tp, np.log10(flux))[2]**2)
+                loglin[1].append(stats.linregress(np.log10(tp), flux)[2]**2)
+                lin[2].append(stats.linregress(si, flux)[2]**2)
                 log[2].append(stats.linregress(np.log10(si),
-                                               np.log10(flux))[2]**2.0)
-                linlog[2].append(stats.linregress(si, np.log10(flux))[2]**2.0)
-                loglin[2].append(stats.linregress(np.log10(si), flux)[2]**2.0)
+                                               np.log10(flux))[2]**2)
+                linlog[2].append(stats.linregress(si, np.log10(flux))[2]**2)
+                loglin[2].append(stats.linregress(np.log10(si), flux)[2]**2)
 
     print('\nAIRMASS CORRELATIONS (AM VS. FL):')
     print('LIN-LIN: '+str(np.mean(lin[0])))
@@ -334,7 +329,7 @@ if __name__ == '__main__':
                 parba[2*i+1].append(flux)
             else:
                 linr_linlog = stats.linregress(am, np.log10(flux))
-                model = (10.0**linr_linlog[1])*(10.0**(linr_linlog[0]*am))
+                model = (10**linr_linlog[1])*(10**(linr_linlog[0]*am))
                 parba[2*i].append(flux/model)
                 parba[2*i+1].append(flux/model)
     parba = np.swapaxes(np.array(parba), 1, 2)
@@ -357,7 +352,7 @@ if __name__ == '__main__':
                 paraa[2*i+1].append(flux)
             else:
                 linr_linlog = stats.linregress(am, np.log10(flux))
-                model = (10.0**linr_linlog[1])*(10.0**(linr_linlog[0]*am))
+                model = (10**linr_linlog[1])*(10**(linr_linlog[0]*am))
                 paraa[2*i].append(flux/model)
                 paraa[2*i+1].append(flux/model)
     paraa = np.swapaxes(np.array(paraa), 1, 2)
@@ -426,7 +421,7 @@ if __name__ == '__main__':
                 psrba[2*i+1].append(flux)
             else:
                 linr_linlog = stats.linregress(si, np.log10(flux))
-                model = (10.0**linr_linlog[1])*(10.0**(linr_linlog[0]*si))
+                model = (10**linr_linlog[1])*(10**(linr_linlog[0]*si))
                 psrba[2*i].append(flux/model)
                 psrba[2*i+1].append(flux/model)
     psrba = np.swapaxes(np.array(psrba), 1, 2)
@@ -449,7 +444,7 @@ if __name__ == '__main__':
                 psraa[2*i+1].append(flux)
             else:
                 linr_linlog = stats.linregress(si, np.log10(flux))
-                model = (10.0**linr_linlog[1])*(10.0**(linr_linlog[0]*si))
+                model = (10**linr_linlog[1])*(10**(linr_linlog[0]*si))
                 psraa[2*i].append(flux/model)
                 psraa[2*i+1].append(flux/model)
     psraa = np.swapaxes(np.array(psraa), 1, 2)
@@ -462,32 +457,32 @@ if __name__ == '__main__':
 
     pclea = fc.frea('Data/Temp/P' + tag + '/m06sraa' + tag + '.fits')
 
-    '''
+    # ''
     # WATERFAL PLOTS #
     # # # ARGUMENTS # # #
     fc.flis(psraa, 'NORM').writeto('Images/s04clea.fits', overwrite=True)
     f = [[0, 1], [1, 1], [2, 1], [2, 0]]
-    pcomp = [pclea, palig, pextr]
+    pgrou = [pclea, palig, pextr]
 
     # # # PARAMETERS # # #
     spec_num = len(f)
-    rows, cols = len(pcomp[0][0]), len(pcomp[0][0][0])
+    rows, cols = len(pgrou[0][0]), len(pgrou[0][0][0])
     ratio = float(rows)/float(cols)
     bot, top, lef, rig = 0.15, 0.25, 0.05, 0.05
-    quant = (1.0-(bot+top))/float(spec_num)
+    quant = (1-(bot+top))/float(spec_num)
     fig_w = 18
-    fig_h = ratio*float(fig_w*spec_num)*((1.0-(lef+rig))/(1.0-(bot+top)))
+    fig_h = ratio*float(fig_w*spec_num)*((1-(lef+rig))/(1-(bot+top)))
 
-    for i in range(int(len(pcomp[0])/2)):
+    for i in range(int(len(pgrou[0])/2)):
         # # # FIGURE # # #
         fig = pl.figure(figsize=(fig_w, fig_h))
         fig.suptitle(r'$Chip\,\,%d$' % (i+1), fontsize=24)
 
         # # # GENERAL AXIS # # #
-        gb = fig.add_axes([lef, bot, 1.0-(lef+rig), 1.0-(bot+top)])
+        gb = fig.add_axes([lef, bot, 1-(lef+rig), 1-(bot+top)])
         gb.axis([0, cols-1, 0, rows-1])
         gb.xaxis.set_ticks(np.arange(15, cols, 100))
-        gent = np.round(pwave[i][0][gb.get_xticks()]*10.0, 3)
+        gent = np.round(pwave[i][0][gb.get_xticks()], 3)
         gb.set_xticklabels(map(str, gent), fontsize=8)
         gb.set_xlabel(r'$Wavelength-\lambda\,\,(\mu m)$', fontsize=12)
 
@@ -503,11 +498,11 @@ if __name__ == '__main__':
         # # # SUBPLOTS # # #
         sub = []
         for j in range(spec_num):
-            a = pcomp[f[j][0]][2*i+f[j][1]]
+            a = pgrou[f[j][0]][2*i+f[j][1]]
             per, ipol = 2, 'nearest'
             p = np.percentile(a[a != 0], per)
             q = np.percentile(a[a != 0], 100-per)
-            sub.append(fig.add_axes([lef, bot+j*quant, 1.0-(lef+rig), quant]))
+            sub.append(fig.add_axes([lef, bot+j*quant, 1-(lef+rig), quant]))
             sub[j].imshow(a, interpolation=ipol, cmap='gray').set_clim(p, q)
             sub[j].xaxis.set_ticks([])
             sub[j].yaxis.set_ticks(np.arange(0, 33, 11, dtype=int))
@@ -517,7 +512,7 @@ if __name__ == '__main__':
         iname = 'Images/c0' + str(i+1) + 'wfal.png'
         pl.savefig(iname, dpi=500)
         pl.close()
-    '''
+    # ''
 
     # LEAST SQUARES PROCESS
     pcomp = [[], []]
@@ -526,13 +521,13 @@ if __name__ == '__main__':
         pcomp[1].append([])
         for j in range(len(pwave)):
             arr = [pclea[2*j+1][i] != 0]
-            ins = np.copy(10.0*pwave[j][i][arr])
-            pcomp[0][i] = np.insert(pcomp[0][i], len(pcomp[0][i]), list(ins))
+            ins = np.copy(pwave[j][i][arr])
+            pcomp[0][i] = np.insert(pcomp[0][i], len(pcomp[0][i]), ins)
             ins = np.copy(pclea[2*j+1][i][arr])
-            pcomp[1][i] = np.insert(pcomp[1][i], len(pcomp[1][i]), list(ins))
+            pcomp[1][i] = np.insert(pcomp[1][i], len(pcomp[1][i]), ins)
     pcomp = np.array(pcomp)
 
-    pdiv, ampv = 1.816e-5, 400.0
+    pdiv, ampv = 1.816e-5, 400
     pamp = pdiv*ampv
     slist = np.arange(-pamp+pdiv, pamp, pdiv)
     vlist = slist*(sol/wl)
@@ -542,7 +537,7 @@ if __name__ == '__main__':
         npile.append([])
         for s in slist:
             mflux = interpolate.splev(pcomp[0][i] + s, rep, der=0)
-            npile[i].append(sum((mflux-pcomp[1][i])**2.0))
+            npile[i].append(sum((mflux-pcomp[1][i])**2))
     for i in range(len(npile)):
         npile[i] /= np.median(npile[i])
     ml = np.mean(npile, axis=0)
@@ -557,7 +552,7 @@ if __name__ == '__main__':
 
     fname = 'Data/Temp/P' + tag + '/t05mode' + tag + '.fits'
     temp = fits.HDUList(fits.PrimaryHDU())
-    temp.append(cp.deepcopy(fits.ImageHDU(data=npile, name='MOD1')))
+    temp.append(fits.ImageHDU(data=npile, name='MOD1'))
     temp.writeto(fname, overwrite=True)
 
     fig, ax = pl.subplots(nrows=1, ncols=1, figsize=(18, 3))
@@ -576,7 +571,7 @@ if __name__ == '__main__':
 
     # LUCKY MODEL RECOVERY
     wrg = ''  # 'wrg'
-    wldel = (wl/sol)*(kp*np.sin(2.0*np.pi*phase)+vsys)
+    wldel = (wl/sol)*(kp*np.sin(2*np.pi*phase)+vsys)
 
     cutv = int(max(np.absolute(wldel))/pdiv)
     pampn = (ampv-cutv)*pdiv
@@ -590,7 +585,7 @@ if __name__ == '__main__':
         other.append(np.array(new))
     other = np.array(other)
 
-    imptnt = -1.0*np.sum(other, axis=0)
+    imptnt = -np.sum(other, axis=0)
     fig, ax = pl.subplots(nrows=1, ncols=1)
     ax.plot(range(len(imptnt)), imptnt, 'kx')
     ax.xaxis.set_ticks(np.arange(8, len(other[0]), 95))
@@ -604,7 +599,7 @@ if __name__ == '__main__':
 
     fname = 'Data/Temp/P' + tag + '/t06reco' + tag + wrg + '.fits'
     temp = fits.HDUList(fits.PrimaryHDU())
-    temp.append(cp.deepcopy(fits.ImageHDU(data=other, name='REC1')))
+    temp.append(fits.ImageHDU(data=other, name='REC1'))
     temp.writeto(fname, overwrite=True)
 
     fig, ax = pl.subplots(nrows=1, ncols=1, figsize=(18, 3))
@@ -622,19 +617,19 @@ if __name__ == '__main__':
     pl.close()
 
     # MODEL RECOVERY
-    kpdiv, kpampv = 1.5, 200.0
+    kpdiv, kpampv = 1.5, 200
     kpamp = kpdiv*kpampv
     kplist = np.arange(-kpamp+kpdiv, kpamp, kpdiv)
 
     cutv = []
     for i in range(len(kplist)):
-        wldel = (wl/sol)*(kplist[i]*np.sin(2.0*np.pi*phase))
+        wldel = (wl/sol)*(kplist[i]*np.sin(2*np.pi*phase))
         cutv.append(int(max(np.absolute(wldel))/pdiv))
     cutv = max(cutv)
 
     final = []
     for i in range(len(kplist)):
-        wldel = (wl/sol)*(kplist[i]*np.sin(2.0*np.pi*phase))
+        wldel = (wl/sol)*(kplist[i]*np.sin(2*np.pi*phase))
         pampn = (ampv-cutv)*pdiv
         snew = np.arange(-pampn+pdiv, pampn, pdiv)
         vnew = snew*(sol/wl)
@@ -649,7 +644,7 @@ if __name__ == '__main__':
 
     fname = 'Data/Temp/P' + tag + '/t07fina' + tag + '.fits'
     temp = fits.HDUList(fits.PrimaryHDU())
-    temp.append(cp.deepcopy(fits.ImageHDU(data=final, name='FINAL1')))
+    temp.append(fits.ImageHDU(data=final, name='FINAL1'))
     temp.writeto(fname, overwrite=True)
 
     fig, ax = pl.subplots(nrows=1, ncols=1, figsize=(8, 8))
@@ -665,3 +660,4 @@ if __name__ == '__main__':
     pl.tight_layout()
     pl.savefig('Data/Temp/P' + tag + '/map' + tag + '.png')
     pl.close()
+    '''

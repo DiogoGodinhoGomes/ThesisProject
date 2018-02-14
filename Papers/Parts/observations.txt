@@ -24,7 +24,7 @@ Instrument:
 Resolution:
  - R ~ 100 000
 Program:
- - ESO large program 186.C-0289 
+ - ESO large program 093.C-0880(B)
  - Designed to study the brightest transiting and non-transiting hot-Jupiter systems visible from Cerro Paranal
 Aim:
  - Determining the structure and composition of a hot Jupiter’s atmosphere using high resolution spectroscopy
@@ -41,13 +41,21 @@ Wavelength:
 
 --- DRAFT ---
 
-The targets of the observations were the host star HD 209458 (B = 8.21 ± 0.02 mag (H{\o}g et al. 2000), K = 6.308 ± 0.026 mag (Cutri et al. 2003)) and its companion, HD 209458 b, a Hot Jupiter in a close transiting orbit (M = 0.714 ± 0.017 MJ, a = 0.04747 ± 0.00055 au, i = 86.590 ± 0.046 deg (Southworth 2010)), for approximately 5 hours on the night of July 8th, 2014. The instrument used was the CRyogenic high-resolution InfraRed Echelle Spectrograph (CRIRES), mounted at the Nasmyth focus A of the 8.2-m UT1/Antu at the ESO's Very Large Telescope (VLT), Cerro Paranal, Chile. This infrared detector contains four Aladdin III InSb detectors, each of them with size 1024 x 512 pixels, and gaps of around 280 pixels between each pair of detectors. These observations (concerning the determination of the structure and composition of HD 209458 b’s atmosphere) are part of ESO's program 186.C-0289, which intends to study the brightest transiting and non-transiting hot-Jupiter systems visible from Cerro Paranal.
+The targets of the observations were the host star HD 209458 (B = 8.21 ± 0.02 mag (H{\o}g et al. 2000), K = 6.308 ± 0.026 mag (Cutri et al. 2003)) and its companion, HD 209458 b, a Hot Jupiter in a close transiting orbit (M = 0.714 ± 0.017 MJ, a = 0.04747 ± 0.00055 au, i = 86.590 ± 0.046 deg (Southworth 2010)), for approximately 5 hours on the night of July 8th, 2014. The instrument used was the CRyogenic high-resolution InfraRed Echelle Spectrograph (CRIRES), mounted at the Nasmyth focus A of the 8.2-m UT1/Antu at the ESO's Very Large Telescope (VLT), Cerro Paranal, Chile. This infrared detector contains four Aladdin III InSb detectors, each of them with size 1024 x 512 pixels, and gaps of around 280 pixels between each pair of detectors. These observations (concerning the determination of the structure and composition of HD 209458 b’s atmosphere) are part of ESO program 093.C-0880(B).
 
-During the observations, 33 spectra were collected on the L Band - the atmospheric transmission window in the mid-infrared around 3.5 μm - each one of them being the result of two different sets of exposures of 8 x 30.0 s each, with a delay of 0.1 s between integrations. Althought setting a fixed position for the telescope relatively to the slit increases stability and decreases the overheads, in order to achieve an easier sky-background subtraction, these observations were done in the nodding mode: the telescope was nodded along the slit by 10 arcsec between each set of exposures in a ABBA pattern. As a consequence, the final extracted data consist of an AB or a BA pair per spectrum.
+During the observations, 33 spectra were collected on the L Band - the atmospheric transmission window in the mid-infrared around 3.5 μm - each one of them being the result of two different sets of exposures of 8 x 30.0 s each, with an overhead of 0.1 s between integrations. Althought setting a fixed position for the telescope relatively to the slit increases stability and decreases the overheads, in order to achieve an easier sky-background subtraction, these observations were done in the nodding mode: the telescope was nodded along the slit by 10 arcsec between each set of exposures in a ABBA pattern. As a consequence, the final extracted data consist of an AB or a BA pair per spectrum.
+
+--- 8x30s is A or B, not a pair
+--- overhead average
+--- 3 km/s per resolution element (1.5 km/s per pixel)
 
 The range of wavelengths covered with the observations was 3.459-3.543 μm, with a resolution of R ~ 100000 which corresponds to approximately 1.5 km/s per resolution element on the exoplanet's radial velocity - this high resolution results from using a 0.2 arcsec slit together with the Multi Application Curvature Adapative Optics (MACAO) system (Arsenault et al. 2003). HD 209458 b was continuously observed shortly after a secondary eclipse, when a significant portion of the dayside of the planet was visible, during the orbital phases ranging between 0.53 and 0.59. For these observed orbital phases and a radial velocity semi-amplitude (approximately the same as the orbital velocity, as the system has an inclination of almost 90 deg) of Kp = 140 ± 10 km/s (Snellen et al. 2010), the expected variation in the exoplanet's radial velocity throughout the observations is about ∆RVp ~ 48 km/s (or 32 pixels on the CRIRES detectors).
 
+--- update the orbital phases
+
 During the observations, the seeing evolved to get higher towards the last extracted spectra: it reached its minimum on the eighth spectrum - 0.67 arcsec - and its maximum on the very last one - 1.50 arcsec.
+
+--- seeing worsened towards the final spectra
 
 --- EXAMPLES ---
 
