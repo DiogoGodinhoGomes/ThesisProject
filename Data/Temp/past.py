@@ -372,3 +372,47 @@ for i in range(int(len(palig)/2)):
                              np.copy(psraa[2*i+1]), axis=0)
     fname = 'Data/Temp/Old/P' + tag + '/oldwfal' + tag + '.fits'
     fc.flis(pwfal, 'NORM').writeto('Data/Temp/.fits', overwrite=True)
+
+# -------------------
+# - OBSERVED PHASES -
+# -------------------
+    obs_times = fc.fhea(flist, ['MJD-OBS'], 0)
+
+    pl.title('Observed times')
+    pl.plot(range(len(obs_times[0])), obs_times[0], 'rx')
+    pl.grid(True)
+    pl.savefig('obs_times.png', dpi=500)
+    pl.close()
+
+    pl.title('Consecutive differences')
+    pl.plot(range(len(obs_times[0])-1), np.diff(obs_times[0]), 'ko')
+    pl.grid(True)
+    pl.savefig('obs_times_diff.png', dpi=500)
+    pl.close()
+
+    source = ['wikipedia.org', 'exoplanet.eu', 'exoplanets.org',
+              'exoplanetarchive.edu']
+    s_tag = ['wiki', 'exopeu', 'exoporg', 'exopedu']
+    t_zero = [2452854.825415-2400000.5, 2452968.399-2400000.5,
+              2452826.628514-2400000.5, 2452765.790-2400000.5]
+    period = [3.52474541, 3.52472, 3.52474859, 3.5246]
+    number = 2
+
+    print(obs_times)
+
+    obs_phases = ((obs_times[0]-t_zero[number])/period[number]) % 1
+    pl.title('Source: %s' % source[number])
+    pl.plot(range(len(obs_times[0])), obs_phases, 'r.')
+    pl.grid(True)
+    pl.savefig('obs_phases_' + s_tag[number] + '.png', dpi=500)
+    pl.close()
+
+    t_zero_diff = ((np.array(t_zero)-t_zero[number])/period[number]) % 1
+    pl.title('Source: %s' % source[number])
+    pl.plot(range(len(t_zero_diff)), t_zero_diff, 'r.')
+    pl.grid(True)
+    pl.savefig('t_zero_diff_' + s_tag[number] + '.png', dpi=500)
+    pl.close()
+
+    # Calculation of the average overhead duration in minutes.
+    print(24*60*np.mean(np.diff(obs_times[0]))-8)

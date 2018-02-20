@@ -8,7 +8,9 @@ import matplotlib.pyplot as pl
 import matplotlib.ticker as tk
 from astropy.io import fits
 from scipy import interpolate
+from scipy import ndimage
 from scipy import stats
+from astropy.analytic_functions.blackbody import blackbody_lambda
 
 
 if __name__ == '__main__':
@@ -175,62 +177,32 @@ if __name__ == '__main__':
         salig = np.swapaxes(np.array(np.genfromtxt(tname), dtype=None), 0, 1)
         print('     Read-in complete.')
 
-    '''
-    # ---------------------------
-    # -                         -
-    # - VERY VERY VERY RAW CODE -
-    # -                         -
-    # ---------------------------
+    # -------------------------
+    # -                       -
+    # - LEAST SQUARES - MODEL -
+    # -                       -
+    # -------------------------
 
+    # MODEL INJECTION
+    # Extraction of the observations' time stamps.
     obs_times = fc.fhea(flist, ['MJD-OBS'], 0)
 
-    pl.title('Observed times')
-    pl.plot(range(len(obs_times[0])), obs_times[0], 'rx')
-    pl.grid(True)
-    pl.savefig('obs_times.png', dpi=500)
-    pl.close()
-
-    pl.title('Consecutive differences')
-    pl.plot(range(len(obs_times[0])-1), np.diff(obs_times[0]), 'ko')
-    pl.grid(True)
-    pl.savefig('obs_times_diff.png', dpi=500)
-    pl.close()
-
-    source = ['wikipedia.org', 'exoplanet.eu', 'exoplanets.org',
-              'exoplanetarchive.edu']
-    s_tag = ['wiki', 'exopeu', 'exoporg', 'exopedu']
-    t_zero = [2452854.825415-2400000.5, 2452968.399-2400000.5,
-              2452826.628514-2400000.5, 2452765.790-2400000.5]
-    period = [3.52474541, 3.52472, 3.52474859, 3.5246]
-    number = 2
-
-    print(obs_times)
-
-    obs_phases = ((obs_times[0]-t_zero[number])/period[number]) % 1
-    pl.title('Source: %s' % source[number])
-    pl.plot(range(len(obs_times[0])), obs_phases, 'r.')
-    pl.grid(True)
-    pl.savefig('obs_phases_' + s_tag[number] + '.png', dpi=500)
-    pl.close()
-
-    t_zero_diff = ((np.array(t_zero)-t_zero[number])/period[number]) % 1
-    pl.title('Source: %s' % source[number])
-    pl.plot(range(len(t_zero_diff)), t_zero_diff, 'r.')
-    pl.grid(True)
-    pl.savefig('t_zero_diff_' + s_tag[number] + '.png', dpi=500)
-    pl.close()
-
-    # # # LEAST SQUARES - MODEL # # #
-    # MODEL INJECTION
-    rdt = 0.001
+    # Definition of the important physical parameters.
+    rdt = 1.0
     tag = str(rdt)
+    period = 3.52474859
     sol, wl = 299792.458, 3.5
-    phase = obs_phases
+    t_zero = 2452826.628521-2400000.5
+
+    # Calculation of the observed orbital phases.
+    phase = ((obs_times[0]-t_zero)/period) % 1
 
     mname = 'Data/Models/spec_1-1-1-1-1-1.dat'
     model = np.flip(np.swapaxes(np.genfromtxt(mname, dtype=float), 0, 1), 1)
-    ximp, yimp = model[0], model[1]/np.median(model[1])
-    rep = interpolate.splrep(ximp, yimp, s=0)
+
+    sigma = 3/(2*(2*np.log(2))**0.5)
+    xmdl, ymdl = model[0], ndimage.filters.gaussian_filter(model[1], sigma)
+    rep = interpolate.splrep(xmdl, ymdl, s=0)
 
     kp, vsys, vbar = 135.0, -140.0, 0.0
     wldel = (wl/sol)*(kp*np.sin(2*np.pi*phase)+vsys+vbar)
@@ -241,8 +213,10 @@ if __name__ == '__main__':
         ptemp.append([])
         for j in range(len(palig[2*i+1])):
             ins = np.copy(pwave[i][j])
-            mflux = interpolate.splev(ins + wldel[j], rep, der=0)
-            ins = (mflux**rdt)*np.copy(palig[2*i][j])
+            pflux = interpolate.splev(ins + wldel[j], rep, der=0)
+            sflux = blackbody_lambda((ins + wldel[j])*10**4, 6071)
+            inje = 0.1*(pflux/sflux)*((1.41*7.1492e7)/(1.2*6.957e8))**2
+            ins = (1+rdt*np.array(inje, dtype=float))*np.copy(palig[2*i][j])
             mdn = np.median(ins[ins != 0])
             ptemp[2*i].append(ins)
             ptemp[2*i+1].append(ins/mdn)
@@ -536,8 +510,8 @@ if __name__ == '__main__':
     for i in range(len(pcomp[0])):
         npile.append([])
         for s in slist:
-            mflux = interpolate.splev(pcomp[0][i] + s, rep, der=0)
-            npile[i].append(sum((mflux-pcomp[1][i])**2))
+            pflux = interpolate.splev(pcomp[0][i] + s, rep, der=0)
+            npile[i].append(sum((pflux-pcomp[1][i])**2))
     for i in range(len(npile)):
         npile[i] /= np.median(npile[i])
     ml = np.mean(npile, axis=0)
@@ -547,7 +521,8 @@ if __name__ == '__main__':
     sl = np.std(npile, axis=0)
     for i in range(len(npile[0])):
         for j in range(len(npile)):
-            npile[j][i] /= sl[i]
+            if sl[i] != 0:
+                npile[j][i] /= sl[i]
     npile = np.array(npile)
 
     fname = 'Data/Temp/P' + tag + '/t05mode' + tag + '.fits'
@@ -640,7 +615,8 @@ if __name__ == '__main__':
             arr = interpolate.splev(snew, rep, der=0)
             now.append(np.array(arr))
         final.append(np.sum(np.array(now), axis=0))
-    final = np.array(final)
+    final = np.array(final)/np.std(final)
+    print(np.unravel_index(final.argmin(), final.shape), final.min(), rdt)
 
     fname = 'Data/Temp/P' + tag + '/t07fina' + tag + '.fits'
     temp = fits.HDUList(fits.PrimaryHDU())
@@ -660,4 +636,3 @@ if __name__ == '__main__':
     pl.tight_layout()
     pl.savefig('Data/Temp/P' + tag + '/map' + tag + '.png')
     pl.close()
-    '''

@@ -4,23 +4,39 @@ import copy as cp
 import numpy as np
 import matplotlib.pyplot as pl
 import matplotlib.ticker as tk
-from scipy import interpolate
+from scipy import ndimage as ni
+from scipy import interpolate as it
 
 # (1) - Interpolation test.
 '''
-a = [1, 2, 3, 4, 5, 6]
+v = 2
+m = 1.7
 
-b = np.sin(a)
+a = np.arange(0, 12.001, 1)
+b = np.sin(v*a)
+rep = it.splrep(a, b, s=0)
 
-rep = interpolate.splrep(a, b, s=0)
+newa = np.arange(0, 12.001, 0.17)
+newb = it.splev(newa, rep, der=0)
 
-newa = [1.5, 2.5, 3.5, 4.5, 5.5]
+cx = np.arange(0.3, 12.001, m)
+cy = it.splev(cx, rep, der=0)
 
-newb = interpolate.splev(newa, rep, der=0)
+f = np.arange(0, 12.001, 0.01)
 
-pl.plot(a, b, 'x', newa, newb, 'o',
-        np.arange(0, 6, 0.01), np.sin(np.arange(0, 6, 0.01)))
+tx = np.arange(0.3, 12.001, m)
+ty = []
+for i in range(len(tx)):
+    ty.append([])
+for i in range(len(newa)):
+    ty[np.argmin(np.absolute(newa[i]-tx))].append(newb[i])
+for i in range(len(ty)):
+    ty[i] = np.mean(ty[i])
+
+pl.plot(a, b, 'bx', newa, newb, 'co', f, np.sin(v*f), 'r:', tx, ty, 'kd', cx, cy, 'gd')
+pl.grid(True)
 pl.show()
+pl.close()
 '''
 
 # (2) - Array test.
@@ -91,4 +107,16 @@ a = [0, 2, 2.0, 4/2, 5, 7, 2.0, -2, 2, 2.0/1, 3, -8, -1.2]
 b = np.delete(range(len(a)), np.nonzero(np.array(a)-2))
 
 print(a, '\n', b)
+'''
+
+# (6) Convolution test.
+'''
+mname = '/home/diogo/Documents/Thesis/Data/Models/spec_1-1-1-1-1-1.dat'
+model = np.flip(np.swapaxes(np.genfromtxt(mname, dtype=float), 0, 1), 1)
+conv = ni.filters.gaussian_filter(model[1], 3/(2*(2*np.log(2))**0.5))
+
+pl.plot(model[0], model[1], 'r:', model[0], conv, 'k-.')
+pl.grid(True)
+pl.show()
+pl.close()
 '''
