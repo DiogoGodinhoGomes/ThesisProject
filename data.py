@@ -188,7 +188,7 @@ if __name__ == '__main__':
     obs_times = fc.fhea(flist, ['MJD-OBS'], 0)
 
     # Definition of the important physical parameters.
-    rdt = 1.0
+    rdt = 0.0
     tag = str(rdt)
     period = 3.52474859
     sol, wl = 299792.458, 3.5
@@ -197,6 +197,7 @@ if __name__ == '__main__':
     # Calculation of the observed orbital phases.
     phase = ((obs_times[0]-t_zero)/period) % 1
 
+    '''
     mname = 'Data/Models/spec_1-1-1-1-1-1.dat'
     model = np.flip(np.swapaxes(np.genfromtxt(mname, dtype=float), 0, 1), 1)
 
@@ -204,7 +205,7 @@ if __name__ == '__main__':
     xmdl, ymdl = model[0], ndimage.filters.gaussian_filter(model[1], sigma)
     rep = interpolate.splrep(xmdl, ymdl, s=0)
 
-    kp, vsys, vbar = 135.0, -140.0, 0.0
+    kp, vsys, vbar = 180.0, 20.0, 0.0
     wldel = (wl/sol)*(kp*np.sin(2*np.pi*phase)+vsys+vbar)
 
     ptemp = []
@@ -223,6 +224,7 @@ if __name__ == '__main__':
     palig = np.array(ptemp)
     fname = 'Data/Temp/P' + tag + '/t04inje' + tag + '.fits'
     fc.flis(palig, 'NORM').writeto(fname, overwrite=True)
+    '''
 
     # TELLURIC FEATURES REMOVAL
     # Data to be collected from the header.
@@ -431,7 +433,7 @@ if __name__ == '__main__':
 
     pclea = fc.frea('Data/Temp/P' + tag + '/m06sraa' + tag + '.fits')
 
-    # ''
+    '''
     # WATERFAL PLOTS #
     # # # ARGUMENTS # # #
     fc.flis(psraa, 'NORM').writeto('Images/s04clea.fits', overwrite=True)
@@ -486,7 +488,7 @@ if __name__ == '__main__':
         iname = 'Images/c0' + str(i+1) + 'wfal.png'
         pl.savefig(iname, dpi=500)
         pl.close()
-    # ''
+    '''
 
     # LEAST SQUARES PROCESS
     pcomp = [[], []]
@@ -506,6 +508,7 @@ if __name__ == '__main__':
     slist = np.arange(-pamp+pdiv, pamp, pdiv)
     vlist = slist*(sol/wl)
 
+    '''
     npile = []
     for i in range(len(pcomp[0])):
         npile.append([])
@@ -513,7 +516,7 @@ if __name__ == '__main__':
             pflux = interpolate.splev(pcomp[0][i] + s, rep, der=0)
             npile[i].append(sum((pflux-pcomp[1][i])**2))
     for i in range(len(npile)):
-        npile[i] /= np.median(npile[i])
+        npile[i] -= np.mean(npile[i])
     ml = np.mean(npile, axis=0)
     for i in range(len(npile[0])):
         for j in range(len(npile)):
@@ -543,7 +546,9 @@ if __name__ == '__main__':
     pl.tight_layout()
     pl.savefig('Data/Temp/P' + tag + '/mod' + tag + '.png', dpi=500)
     pl.close()
+    '''
 
+    '''
     # LUCKY MODEL RECOVERY
     wrg = ''  # 'wrg'
     wldel = (wl/sol)*(kp*np.sin(2*np.pi*phase)+vsys)
@@ -590,12 +595,14 @@ if __name__ == '__main__':
     pl.tight_layout()
     pl.savefig('Data/Temp/P' + tag + '/rec' + tag + wrg + '.png', dpi=500)
     pl.close()
+    '''
 
     # MODEL RECOVERY
     kpdiv, kpampv = 1.5, 200
     kpamp = kpdiv*kpampv
     kplist = np.arange(-kpamp+kpdiv, kpamp, kpdiv)
 
+    '''
     cutv = []
     for i in range(len(kplist)):
         wldel = (wl/sol)*(kplist[i]*np.sin(2*np.pi*phase))
@@ -636,3 +643,74 @@ if __name__ == '__main__':
     pl.tight_layout()
     pl.savefig('Data/Temp/P' + tag + '/map' + tag + '.png')
     pl.close()
+    '''
+
+    # MODEL RECOVERY (EVERY MODEL)
+    mnames = np.array(sorted(gb.glob('Data/Models/spec_*.dat')))
+    sigma = 3/(2*(2*np.log(2))**0.5)
+
+    for mname in mnames:
+        model = np.flip(np.swapaxes(np.genfromtxt(mname, dtype=float), 0, 1), 1)
+        xmdl, ymdl = model[0], ndimage.filters.gaussian_filter(model[1], sigma)
+        rep = interpolate.splrep(xmdl, ymdl, s=0)
+
+        npile = []
+        for i in range(len(pcomp[0])):
+            npile.append([])
+            for s in slist:
+                pflux = interpolate.splev(pcomp[0][i] + s, rep, der=0)
+                npile[i].append(sum((pflux-pcomp[1][i])**2))
+        for i in range(len(npile)):
+            npile[i] -= np.mean(npile[i])
+        ml = np.mean(npile, axis=0)
+        for i in range(len(npile[0])):
+            for j in range(len(npile)):
+                npile[j][i] -= ml[i]
+        sl = np.std(npile, axis=0)
+        for i in range(len(npile[0])):
+            for j in range(len(npile)):
+                if sl[i] != 0:
+                    npile[j][i] /= sl[i]
+        npile = np.array(npile)
+
+        cutv = []
+        for i in range(len(kplist)):
+            wldel = (wl/sol)*(kplist[i]*np.sin(2*np.pi*phase))
+            cutv.append(int(max(np.absolute(wldel))/pdiv))
+        cutv = max(cutv)
+
+        final = []
+        for i in range(len(kplist)):
+            wldel = (wl/sol)*(kplist[i]*np.sin(2*np.pi*phase))
+            pampn = (ampv-cutv)*pdiv
+            snew = np.arange(-pampn+pdiv, pampn, pdiv)
+            vnew = snew*(sol/wl)
+
+            now = []
+            for j in range(len(pcomp[0])):
+                rep = interpolate.splrep(slist - wldel[j], npile[j], s=0)
+                arr = interpolate.splev(snew, rep, der=0)
+                now.append(np.array(arr))
+            final.append(np.sum(np.array(now), axis=0))
+        final = np.array(final)/np.std(final)
+
+        fname = 'Results/' + mname[17:-4] + '.fits'
+        temp = fits.HDUList(fits.PrimaryHDU())
+        temp.append(fits.ImageHDU(data=final, name='FINAL1'))
+        temp.writeto(fname, overwrite=True)
+
+        fig, ax = pl.subplots(nrows=1, ncols=1, figsize=(8, 8))
+        ax.imshow(final, interpolation='nearest', cmap='gray', origin='lower')
+        ax.xaxis.set_ticks(np.arange(8, len(final[0]), 30))
+        gent = np.round(vnew[ax.get_xticks()], 0).astype(int)
+        ax.set_xticklabels(map(str, gent), fontsize=12)
+        ax.set_xlabel(r'$System\,\,velocity-V_{sys}$', fontsize=16)
+        ax.yaxis.set_ticks(np.arange(19, len(final), 30))
+        gent = np.round(kplist[ax.get_yticks()], 0).astype(int)
+        ax.set_yticklabels(map(str, gent), fontsize=12)
+        ax.set_ylabel(r'$Radial\,\,velocity-K_p$', fontsize=16)
+        pl.tight_layout()
+        pl.savefig('Results/' + mname[17:-4] + '.png')
+        pl.close()
+        print('Model ' + mname[17:-4] + ' done!')
+        print(np.unravel_index(final.argmin(), final.shape), final.min(), rdt)

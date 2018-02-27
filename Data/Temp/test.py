@@ -110,13 +110,11 @@ print(a, '\n', b)
 '''
 
 # (6) Convolution test.
-'''
-mname = '/home/diogo/Documents/Thesis/Data/Models/spec_1-1-1-1-1-1.dat'
+mname = '/home/diogo/Documents/Thesis/Data/Models/spec_1-1-1-1-1-2.dat'
 model = np.flip(np.swapaxes(np.genfromtxt(mname, dtype=float), 0, 1), 1)
 conv = ni.filters.gaussian_filter(model[1], 3/(2*(2*np.log(2))**0.5))
 
 pl.plot(model[0], model[1], 'r:', model[0], conv, 'k-.')
 pl.grid(True)
-pl.show()
+pl.savefig('/home/diogo/Desktop/1-1-1-1-1-2.png', dpi=1200)
 pl.close()
-'''
